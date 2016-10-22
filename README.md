@@ -1,4 +1,4 @@
-# ATG syntax highlighting - Coco/R for C# 
+# Coco/R for C# - ATG syntax highlighting
 
 **Note:** Requires Sublime Text Build 3084 or newer
 
