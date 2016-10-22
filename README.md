@@ -4,4 +4,5 @@
 
 ## Installation
 1. Click the `Preferences > Browse Packages…` menu in Sublime Text 3
-2. [Download](http://github.com/nolanar/Sublime-3-ATG-Syntax/archive/master.zip) this repositry into your Packages directory
+2. Create a new directory 'ATG'
+3. Copy the atg.sublime-syntax file into this directory
