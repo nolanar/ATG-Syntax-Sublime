@@ -1,6 +1,6 @@
-# Coco/R for C# - ATG syntax highlighting
+# ATG syntax highlighting - Coco/R for C# 
 
-Syntax highlighting package for Sublime Text 3
+**Note:** Requires Sublime Text Build 3084 or newer
 
 ## Installation
 1. Click the `Preferences > Browse Packages…` menu in Sublime Text 3
