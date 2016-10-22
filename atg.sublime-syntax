@@ -1,0 +1,74 @@
+%YAML 1.2
+---
+name: ATG C#
+file_extensions:
+  - atg
+scope: source.atg
+contexts:
+  main:
+    - include: lang
+    - include: strings
+    - include: comments
+    - include: keywords
+
+  lang:
+    - match: '\(\.'
+      scope: punctuation.section.block.begin.atg
+      push: Packages/C#/C#.sublime-syntax
+      with_prototype:
+        - match: '\.\)'
+          scope: punctuation.section.block.end.atg
+          pop: true
+    - match: '<'
+      push: Packages/C#/C#.sublime-syntax
+      with_prototype:
+        - match: '>'
+          scope: punctuation.section.block.end.atg
+          pop: true
+
+  strings:
+    - match: '"'
+      scope: punctuation.definition.string.begin.atg
+      push:
+        - meta_scope: string.quoted.double.atg
+        - match: '"'
+          scope: punctuation.definition.string.end.atg
+          pop: true
+        - match: \\.
+          scope: constant.character.escape.atg
+    - match: "'"
+      scope: punctuation.definition.string.begin.atg
+      push:
+        - meta_scope: string.quoted.single.atg
+        - match: "'"
+          scope: punctuation.definition.string.end.atg
+          pop: true
+        - match: \\.
+          scope: constant.character.escape.atg
+
+  comments:
+    - match: '\/\*'
+      scope: puctuation.definition.comment.atg
+      push:
+        - meta_scope: comment.block.atg
+        - match: '\*\/'
+          scope: punctuation.definition.comment.atg
+          pop: true
+    - match: '\/\/'
+      scope: puctuation.definition.comment.atg
+      push:
+        - meta_scope: comment.line.atg
+        - match: $\n?
+          pop: true
+
+  keywords:
+    - match: '\b(using|ANY|CONTEXT|IGNORE|PRAGMAS|TOKENS|CHARACTERS|END|IGNORECASE|PRODUCTIONS|WEAK|COMMENTS|FROM|NESTED|SYNC|COMPILER|IF|out|TO|)\b'
+      scope: keyword.control.atg
+    - match: '='
+      scope: keyword.operator.assignment.atg
+    - match: '\+|-'
+      scope: keyword.operator.set.atg
+    - match: '\.\.'
+      scope: keyword.operator.range.atg
+    - match: '[\{\}\(\)\|\.\[\]]'
+      scope: keyword.operator.atg
