@@ -6,22 +6,16 @@ file_extensions:
 scope: source.atg
 contexts:
   main:
+    - include: comments
     - include: section_compiler
+    - include: section_ignorecase
+    - include: section_rules
     - include: section_comments_ignore
     - include: section_end
-    - include: comments
-    - include: sections
-    - include: rule
-    
-  rule:
-    - match: '\b[[:alpha:]][\w]+\b'
-      scope: entity.name.rule.atg
-      push:
-        - include: lang
-        - include: keywords
-        - include: strings
-        - meta_scope: meta.rule.body.atg
-        - match: '(?<!\.)\.(?!\.)'
+    - match: ''
+      push: Packages/C#/C#.sublime-syntax
+      with_prototype:
+        - match: '(?=\b(COMPILER|IGNORECASE|CHARACTERS|TOKENS|COMMENTS|IGNORE|PRAGMAS|PRODUCTIONS|END)\b)'
           pop: true
 
   section_compiler:
@@ -29,29 +23,53 @@ contexts:
       captures:
         1: storage.modifier.atg
         2: entity.name.rule.atg
-      push: Packages/C#/C#.sublime-syntax
-      with_prototype:
-        - match: '\b(IGNORECASE|CHARACTERS|TOKENS|COMMENTS|IGNORE|PRAGMAS|PRODUCTIONS)\b'
-          scope: storage.modifier.atg
+
+  section_ignorecase:
+    - match: '\bIGNORECASE\b'
+      scope: storage.modifier.atg
+
+  section_rules:
+    - match: '\b(CHARACTERS|TOKENS|PRAGMAS|PRODUCTIONS)\b'
+      scope: storage.modifier.atg
+      push:
+        - match: '(?=\b(COMPILER|IGNORECASE|CHARACTERS|TOKENS|COMMENTS|IGNORE|PRAGMAS|PRODUCTIONS|END)\b)'
           pop: true
+        - include: rule
+        - include: comments
+        - include: strings
 
   section_comments_ignore:
     - match: '\b(COMMENTS|IGNORE)\b'
       scope: storage.modifier.atg
       push:
+        - match: '(?=\b(COMPILER|IGNORECASE|CHARACTERS|TOKENS|COMMENTS|IGNORE|PRAGMAS|PRODUCTIONS|END)\b)'
+          pop: true
         - include: keywords
         - include: comments
         - include: strings
-        - match: '\b(PRAGMAS|PRODUCTIONS)\b'
-          scope: storage.modifier.atg
-          pop: true
-        - include: sections
 
   section_end:
-    - match: '(\b(END)\b)\s*(\b[[:alpha:]][\w]+\b)'
-      captures:
-        1: storage.modifier.atg
+    - match: '\bEND\b'
+      scope : storage.modifier.atg
+      push:
+        - match: '(?<!\.)\.(?!\.)'
+          scope: punctuation.terminator.atg
+          pop: true
 
+  rule:
+    - match: '\b[[:alpha:]][\w]+\b'
+      scope: entity.name.rule.atg
+      push:
+        - match: '='
+          scope: punctuation.separator.atg
+        - meta_scope: meta.rule.body.atg
+        - match: '(?<!\.)\.(?!\.)'
+          scope: punctuation.terminator.atg
+          pop: true
+        - include: lang
+        - include: keywords
+        - include: strings
+        - include: comments
 
   lang:
     - match: '\(\.'
@@ -104,7 +122,9 @@ contexts:
           pop: true
 
   keywords:
-    - match: '\b(using|ANY|CONTEXT|END|WEAK|FROM|NESTED|SYNC|IF|out|TO|)\b'
+    - match: '\bANY\b'
+      scope: constant.language.atg
+    - match: '\b(CONTEXT|WEAK|FROM|NESTED|SYNC|IF|TO|)\b'
       scope: keyword.control.atg
     - match: '\+|-'
       scope: keyword.operator.set.atg
@@ -112,13 +132,3 @@ contexts:
       scope: keyword.operator.range.atg
     - match: '[\{\}\(\)\|\[\]]'
       scope: keyword.operator.atg
-
-  punctuations:
-    - match: '='
-      scope: punctuation.separator.atg
-    - match: '\.'
-      scope: punctuation.terminator.atg
-
-  sections:
-    - match: '\b(IGNORE|COMMENTS|PRAGMAS|TOKENS|CHARACTERS|PRODUCTIONS|IGNORECASE|COMPILER)\b'
-      scope: storage.modifier.atg
