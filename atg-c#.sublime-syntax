@@ -85,6 +85,12 @@ contexts:
         - match: '>'
           scope: punctuation.section.block.end.atg
           pop: true
+    - match: '\bIF\b\s*\('
+      push: Packages/C#/C#.sublime-syntax
+      with_prototype:
+        - match: '\)'
+          scope: punctuation.section.block.end.atg
+          pop: true
 
   strings:
     - match: '"'
