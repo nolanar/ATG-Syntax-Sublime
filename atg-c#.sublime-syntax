@@ -6,23 +6,26 @@ file_extensions:
 scope: source.atg
 contexts:
   main:
+    - include: imports
     - include: comments
     - include: section_compiler
     - include: section_ignorecase
     - include: section_rules
     - include: section_comments_ignore
     - include: section_end
-    - match: ''
-      push: Packages/C#/C#.sublime-syntax
-      with_prototype:
-        - match: '(?=\b(COMPILER|IGNORECASE|CHARACTERS|TOKENS|COMMENTS|IGNORE|PRAGMAS|PRODUCTIONS|END)\b)'
-          pop: true
 
   section_compiler:
     - match: '(\bCOMPILER\b)\s*(\b[[:alpha:]][\w]+\b)'
       captures:
         1: storage.modifier.atg
         2: entity.name.rule.atg
+      push:
+      - meta_scope: meta.globals.atg
+      - include: "Packages/C#/C#.sublime-syntax#method"
+      - include: "Packages/C#/C#.sublime-syntax#code"
+      with_prototype:
+        - match: '(?=\b(COMPILER|IGNORECASE|CHARACTERS|TOKENS|COMMENTS|IGNORE|PRAGMAS|PRODUCTIONS|END)\b)'
+          pop: true
 
   section_ignorecase:
     - match: '\bIGNORECASE\b'
@@ -60,35 +63,47 @@ contexts:
     - match: '\b[[:alpha:]][\w]+\b'
       scope: entity.name.rule.atg
       push:
-        - match: '='
-          scope: punctuation.separator.atg
+      - meta_scope: meta.rule.atg
+      - match: '(?<!\.)\.(?!\.)'
+        scope: punctuation.section.rule.end.atg
+        pop: true
+      - include: comments
+      - include: parameters
+      - include: semantics
+      - match: '='
+        scope: punctuation.section.rule.begin.atg
+        push:
         - meta_scope: meta.rule.body.atg
-        - match: '(?<!\.)\.(?!\.)'
-          scope: punctuation.terminator.atg
+        - match: '(?=(?<!\.)\.(?!\.))'
+          scope: punctuation.section.rule.end.atg
           pop: true
-        - include: lang
+        - include: comments
+        - include: semantics
         - include: keywords
         - include: strings
-        - include: comments
 
-  lang:
+  semantics:
     - match: '\(\.'
-      scope: punctuation.section.block.begin.atg
-      push: Packages/C#/C#.sublime-syntax
+      scope: punctuation.section.semantic.begin.atg
+      push: 
+      - include: "Packages/C#/C#.sublime-syntax#code"
       with_prototype:
         - match: '\.\)'
-          scope: punctuation.section.block.end.atg
+          scope: punctuation.section.semantic.end.atg
           pop: true
     - match: '<'
-      push: Packages/C#/C#.sublime-syntax
+      scope: punctuation.section.arguments.begin.atg
+      push: 
+      - include: "Packages/C#/C#.sublime-syntax#code"
       with_prototype:
         - match: '>'
-          scope: punctuation.section.block.end.atg
+          scope: punctuation.section.arguments.end.atg
           pop: true
     - match: '\b(IF)\b\s*\('
       captures:
         1: keyword.control.atg
-      push: Packages/C#/C#.sublime-syntax
+      push: 
+      - include: "Packages/C#/C#.sublime-syntax#code"
       with_prototype:
         - match: '\)'
           pop: true
@@ -130,7 +145,7 @@ contexts:
 
   keywords:
     - match: '\bANY\b'
-      scope: constant.language.atg
+      scope: constant.semanticsuage.atg
     - match: '\b(CONTEXT|WEAK|FROM|NESTED|SYNC|IF|TO|)\b'
       scope: keyword.control.atg
     - match: '\+|-'
@@ -139,3 +154,25 @@ contexts:
       scope: keyword.operator.range.atg
     - match: '[\{\}\(\)\|\[\]]'
       scope: keyword.operator.atg
+
+  parameters:
+    - match: '<'
+      push:
+      - match: '>'
+        pop: true
+      - include: "Packages/C#/C#.sublime-syntax#constants"
+      - include: "Packages/C#/C#.sublime-syntax#block"
+      # from C#.sublime-syntax#parameters:
+      - match: '\b(ref|params|out)?\s*\b([\w.\[\]]+)\s+(\w+)\s*(=)?'
+        captures:
+          1: storage.type.modifier.source.cs
+          2: storage.type.generic.source.cs
+          3: variable.parameter.function.source.cs
+          4: keyword.operator.assignment.source.cs
+
+  imports:
+    # from top of C#.sublime-syntax#main:
+    - match: '^\s*(using)\s+([^ ;]*);'
+      scope: meta.keyword.using.source.cs
+      captures:
+        1: keyword.other.using.source.cs
