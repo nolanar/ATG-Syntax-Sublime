@@ -4,10 +4,14 @@ name: ATG C#
 file_extensions:
   - atg
 scope: source.atg
+variables:
+  ident: '\b[[:alpha:]][\w]+\b'
+  terminator: '(?<!\.)\.(?!\.)'
+  section_name: '\b(COMPILER|IGNORECASE|CHARACTERS|TOKENS|COMMENTS|IGNORE|PRAGMAS|PRODUCTIONS|END)\b'
 contexts:
   main:
     - include: imports
-    - include: expression
+    - include: scanner
 
   # Included in contexts by default:
   prototype:
@@ -55,8 +59,74 @@ contexts:
 
 ################ Scanner Specification ##################
 
+  scanner:
+    - include: section_ignorecase
+    - include: section_characters
+    - include: section_tokens
+    - include: section_comments
+    - include: section_ignore
+
+  section_ignorecase:
+    - match: '\bIGNORECASE\b'
+      scope: storage.modifier.atg
+
+  section_characters:
+    - match: '\bCHARACTERS\b'
+      scope: storage.modifier.atg
+      push:
+      - meta_content_scope: "meta.section.characters.body.atg"
+      - match: '(?={{section_name}})'
+        pop: true
+      - include: set_decl
+
+  section_tokens:
+    - match: '\bTOKENS\b'
+      scope: storage.modifier.atg
+      push:
+      - meta_content_scope: "meta.section.tokens.body.atg"
+      - match: '(?={{section_name}})'
+        pop: true
+      - include: token_decl
+
+  section_comments:
+    - match: '\bCOMMENTS\b'
+      scope: storage.modifier.atg
+      push:
+      - meta_content_scope: "meta.section.comments.body.atg"
+      - match: '(?={{section_name}})'
+        pop: true
+      - include: strings
+      - match: '\b(FROM|TO|NESTED)\b'
+        scope: keyword.control.atg
+
+  section_ignore:
+    - match: '\bIGNORE\b'
+      scope: storage.modifier.atg
+      push:
+      - meta_content_scope: "meta.section.ignore.body.atg"
+      - match: '(?={{section_name}})'
+        pop: true
+      - include: set_expr
+      - match: '\bCASE\b'
+        scope: keyword.control.atg
+
+  set_decl:
+    - match: '{{ident}}'
+      scope: entity.name.rule.atg
+      push:
+      - match: '{{terminator}}'
+        scope: punctuation.section.rule.terminator.atg      
+        pop: true
+      - match: '='
+        scope: punctuation.section.rule.definition.atg
+        push:
+        - meta_content_scope: meta.rule.body.atg
+        - match: '(?={{terminator}})'
+          pop: true
+        - include: set_expr
+
   set_expr:
-    - include: string
+    - include: strings
     - include: keyword_any
     - match: '\+'
       scope: keyword.operator.union.atg
@@ -65,8 +135,23 @@ contexts:
     - match: '\.\.'
       scope: keyword.operator.range.atg
 
+  token_decl:
+    - match: ({{ident}}|".*?"|'.*?') # ident and strings are valid token names
+      scope: entity.name.rule.atg
+      push:
+      - match: '{{terminator}}'
+        scope: punctuation.section.rule.terminator.atg
+        pop: true
+      - match: '='
+        scope: punctuation.section.rule.definition.atg
+        push:
+        - meta_content_scope: meta.rule.body.atg
+        - match: '(?={{terminator}})'
+          pop: true
+        - include: token_expr
+
   token_expr:
-    - include: string
+    - include: strings
     - include: keyword_context
   # Bracket Balancing:
     # grouping
