@@ -7,6 +7,7 @@ scope: source.atg
 contexts:
   main:
     - include: imports
+    - include: expression
 
   # Included in contexts by default:
   prototype:
@@ -31,7 +32,6 @@ contexts:
 
   strings:
     # strings are not affected by comments
-    - meta_include_prototype: false
     - match: '"'
       scope: punctuation.definition.string.begin.atg
       push:
