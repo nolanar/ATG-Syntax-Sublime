@@ -7,126 +7,12 @@ scope: source.atg
 contexts:
   main:
     - include: imports
-    - include: comments
-    - include: section_compiler
-    - include: section_ignorecase
-    - include: section_rules
-    - include: section_comments_ignore
-    - include: section_end
 
-  section_compiler:
-    - match: '(\bCOMPILER\b)\s*(\b[[:alpha:]][\w]+\b)'
-      captures:
-        1: storage.modifier.atg
-        2: entity.name.rule.atg
-      push:
-      - meta_scope: meta.globals.atg
-      - include: "Packages/C#/C#.sublime-syntax#method"
-      - include: "Packages/C#/C#.sublime-syntax#code"
-      with_prototype:
-        - match: '(?=\b(COMPILER|IGNORECASE|CHARACTERS|TOKENS|COMMENTS|IGNORE|PRAGMAS|PRODUCTIONS|END)\b)'
-          pop: true
+  # Included in contexts by default:
+  prototype:
+  - include: comments
 
-  section_ignorecase:
-    - match: '\bIGNORECASE\b'
-      scope: storage.modifier.atg
-
-  section_rules:
-    - match: '\b(CHARACTERS|TOKENS|PRAGMAS|PRODUCTIONS)\b'
-      scope: storage.modifier.atg
-      push:
-        - match: '(?=\b(COMPILER|IGNORECASE|CHARACTERS|TOKENS|COMMENTS|IGNORE|PRAGMAS|PRODUCTIONS|END)\b)'
-          pop: true
-        - include: rule
-        - include: comments
-        - include: strings
-
-  section_comments_ignore:
-    - match: '\b(COMMENTS|IGNORE)\b'
-      scope: storage.modifier.atg
-      push:
-        - match: '(?=\b(COMPILER|IGNORECASE|CHARACTERS|TOKENS|COMMENTS|IGNORE|PRAGMAS|PRODUCTIONS|END)\b)'
-          pop: true
-        - include: keywords
-        - include: comments
-        - include: strings
-
-  section_end:
-    - match: '\bEND\b'
-      scope : storage.modifier.atg
-      push:
-        - match: '(?<!\.)\.(?!\.)'
-          scope: punctuation.terminator.atg
-          pop: true
-
-  rule:
-    - match: '\b[[:alpha:]][\w]+\b'
-      scope: entity.name.rule.atg
-      push:
-      - meta_scope: meta.rule.atg
-      - match: '(?<!\.)\.(?!\.)'
-        scope: punctuation.section.rule.end.atg
-        pop: true
-      - include: comments
-      - include: parameters
-      - include: semantics
-      - match: '='
-        scope: punctuation.section.rule.begin.atg
-        push:
-        - meta_scope: meta.rule.body.atg
-        - match: '(?=(?<!\.)\.(?!\.))'
-          scope: punctuation.section.rule.end.atg
-          pop: true
-        - include: comments
-        - include: semantics
-        - include: keywords
-        - include: strings
-
-  semantics:
-    - match: '\(\.'
-      scope: punctuation.section.semantic.begin.atg
-      push: 
-      - include: "Packages/C#/C#.sublime-syntax#code"
-      with_prototype:
-        - match: '\.\)'
-          scope: punctuation.section.semantic.end.atg
-          pop: true
-    - match: '<'
-      scope: punctuation.section.arguments.begin.atg
-      push: 
-      - include: "Packages/C#/C#.sublime-syntax#code"
-      with_prototype:
-        - match: '>'
-          scope: punctuation.section.arguments.end.atg
-          pop: true
-    - match: '\b(IF)\b\s*\('
-      captures:
-        1: keyword.control.atg
-      push: 
-      - include: "Packages/C#/C#.sublime-syntax#code"
-      with_prototype:
-        - match: '\)'
-          pop: true
-
-  strings:
-    - match: '"'
-      scope: punctuation.definition.string.begin.atg
-      push:
-        - meta_scope: string.quoted.double.atg
-        - match: '"'
-          scope: punctuation.definition.string.end.atg
-          pop: true
-        - match: \\.
-          scope: constant.character.escape.atg
-    - match: "'"
-      scope: punctuation.definition.string.begin.atg
-      push:
-        - meta_scope: string.quoted.single.atg
-        - match: "'"
-          scope: punctuation.definition.string.end.atg
-          pop: true
-        - match: \\.
-          scope: constant.character.escape.atg
+################ General ##################
 
   comments:
     - match: '\/\*'
@@ -143,17 +29,143 @@ contexts:
         - match: $\n?
           pop: true
 
-  keywords:
-    - match: '\bANY\b'
-      scope: constant.semanticsuage.atg
-    - match: '\b(CONTEXT|WEAK|FROM|NESTED|SYNC|IF|TO|)\b'
-      scope: keyword.control.atg
-    - match: '\+|-'
-      scope: keyword.operator.set.atg
+  strings:
+    # strings are not affected by comments
+    - meta_include_prototype: false
+    - match: '"'
+      scope: punctuation.definition.string.begin.atg
+      push:
+        - meta_include_prototype: false
+        - meta_scope: string.quoted.double.atg
+        - match: '"'
+          scope: punctuation.definition.string.end.atg
+          pop: true
+        - match: \\.
+          scope: constant.character.escape.atg
+    - match: "'"
+      scope: punctuation.definition.string.begin.atg
+      push:
+        - meta_include_prototype: false
+        - meta_scope: string.quoted.single.atg
+        - match: "'"
+          scope: punctuation.definition.string.end.atg
+          pop: true
+        - match: \\.
+          scope: constant.character.escape.atg
+
+################ Scanner Specification ##################
+
+  set_expr:
+    - include: string
+    - include: keyword_any
+    - match: '\+'
+      scope: keyword.operator.union.atg
+    - match: '-'
+      scope: keyword.operator.difference.atg
     - match: '\.\.'
       scope: keyword.operator.range.atg
-    - match: '[\{\}\(\)\|\[\]]'
-      scope: keyword.operator.atg
+
+  token_expr:
+    - include: string
+    - include: keyword_context
+  # Bracket Balancing:
+    # grouping
+    - match: '\('
+      scope: keyword.control.grouping.atg
+      push:
+        - match: '\)'
+          scope: keyword.control.grouping.atg
+          pop: true
+        - include: token_expr
+    - match: '\)'
+      scope: invalid.illegal.stray-bracket-end
+    # optional
+    - match: '\['
+      scope: keyword.control.optional.atg
+      push:
+        - match: '\]'
+          scope: keyword.control.optional.atg
+          pop: true
+        - include: token_expr
+    - match: '\]'
+      scope: invalid.illegal.stray-bracket-end
+    # repetition
+    - match: '\{'
+      scope: keyword.control.repetition.atg
+      push:
+        - match: '\}'
+          scope: keyword.control.repetition.atg
+          pop: true
+        - include: token_expr
+    - match: '\}'
+      scope: invalid.illegal.stray-bracket-end
+    # alternation
+    - match: '\|'
+      scope: keyword.control.alternation.atg
+
+################ Parser Specification ##################
+
+  expression:
+    - include: strings
+    - include: keyword_if_resolver
+    - include: arguments
+    - include: sem_action
+    - include: keyword_any
+    - match: '\b(WEAK|SYNC)\b'
+      scope: keyword.control.atg
+  # Bracket Balancing:
+    # grouping
+    - match: '\('
+      scope: keyword.control.grouping.atg
+      push:
+        - match: '\)'
+          scope: keyword.control.grouping.atg
+          pop: true
+        - include: expression
+    - match: '\)'
+      scope: invalid.illegal.stray-bracket-end
+    # optional
+    - match: '\['
+      scope: keyword.control.optional.atg
+      push:
+        - match: '\]'
+          scope: keyword.control.optional.atg
+          pop: true
+        - include: expression
+    - match: '\]'
+      scope: invalid.illegal.stray-bracket-end
+    # repetition
+    - match: '\{'
+      scope: keyword.control.repetition.atg
+      push:
+        - match: '\}'
+          scope: keyword.control.repetition.atg
+          pop: true
+        - include: expression
+    - match: '\}'
+      scope: invalid.illegal.stray-bracket-end
+    # alternation
+    - match: '\|'
+      scope: keyword.control.alternation.atg
+
+################ C# language dependent ##################
+
+  imports:
+    # from top of C#.sublime-syntax#main:
+    - match: '^\s*(using)\s+([^ ;]*);'
+      scope: meta.keyword.using.source.cs
+      captures:
+        1: keyword.other.using.source.cs
+
+  sem_action:
+    - match: '\(\.'
+      scope: punctuation.section.semantic.begin.atg
+      push: 
+      - include: "Packages/C#/C#.sublime-syntax#code"
+      with_prototype:
+        - match: '\.\)'
+          scope: punctuation.section.semantic.end.atg
+          pop: true
 
   parameters:
     - match: '<'
@@ -170,9 +182,37 @@ contexts:
           3: variable.parameter.function.source.cs
           4: keyword.operator.assignment.source.cs
 
-  imports:
-    # from top of C#.sublime-syntax#main:
-    - match: '^\s*(using)\s+([^ ;]*);'
-      scope: meta.keyword.using.source.cs
+  arguments:
+    - match: '<'
+      scope: punctuation.section.arguments.begin.atg
+      push: 
+      - include: "Packages/C#/C#.sublime-syntax#code"
+      with_prototype:
+        - match: '>'
+          scope: punctuation.section.arguments.end.atg
+          pop: true
+
+  keyword_if_resolver:
+    - match: '\b(IF)\b\s*\('
       captures:
-        1: keyword.other.using.source.cs
+        1: keyword.control.atg
+      push: 
+      - include: "Packages/C#/C#.sublime-syntax#code"
+      with_prototype:
+        - match: '\)'
+          pop: true
+
+ ################ Keywords ##################
+
+  keyword_context:
+    - match: '\b(CONTEXT)\b\s*\('
+      captures:
+        1: keyword.control.atg
+      push:
+        - match: '\)'
+          pop: true
+        - include: token_expr
+
+  keyword_any:
+    - match: '\bANY\b'
+      scope: constant.language.atg
