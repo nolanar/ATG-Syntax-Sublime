@@ -11,7 +11,10 @@ variables:
 contexts:
   main:
     - include: imports
+    - include: title_and_globals
     - include: scanner
+    - include: parser
+    - include: end_tag
 
   # Included in contexts by default:
   prototype:
@@ -56,6 +59,14 @@ contexts:
           pop: true
         - match: \\.
           scope: constant.character.escape.atg
+
+  end_tag:
+    - match: '\bEND\b'
+      scope : storage.modifier.atg
+      push:
+        - match: '{{terminator}}'
+          scope: punctuation.terminator.atg
+          pop: true
 
 ################ Scanner Specification ##################
 
@@ -190,6 +201,32 @@ contexts:
 
 ################ Parser Specification ##################
 
+  parser:
+    - match: '\bPRODUCTIONS\b'
+      scope: storage.modifier.atg
+      push:
+      - meta_content_scope: "meta.section.productions.body.atg"
+      - match: '(?={{section_name}})'
+        pop: true
+      - include: production_decl
+
+  production_decl:
+    - match: '{{ident}}'
+      scope: entity.name.rule.atg
+      push:
+      - match: '{{terminator}}'
+        scope: punctuation.section.rule.terminator.atg      
+        pop: true
+      - match: '='
+        scope: punctuation.section.rule.definition.atg
+        push:
+        - meta_content_scope: meta.rule.body.atg
+        - match: '(?={{terminator}})'
+          pop: true
+        - include: expression
+      - include: parameters
+      - include: sem_action
+
   expression:
     - include: strings
     - include: keyword_if_resolver
@@ -242,6 +279,20 @@ contexts:
       captures:
         1: keyword.other.using.source.cs
 
+  title_and_globals:
+    - match: '(\bCOMPILER\b)\s*(\b[[:alpha:]][\w]+\b)'
+      captures:
+        1: storage.modifier.atg
+        2: entity.name.rule.atg
+      push:
+      - meta_content_scope: meta.globals.atg
+      - include: "Packages/C#/C#.sublime-syntax#method"
+      - include: "Packages/C#/C#.sublime-syntax#code"
+      with_prototype:
+        # note: section_name variable does not work here
+        - match: '(?=\b(COMPILER|IGNORECASE|CHARACTERS|TOKENS|COMMENTS|IGNORE|PRAGMAS|PRODUCTIONS|END)\b)'
+          pop: true
+        
   sem_action:
     - match: '\(\.'
       scope: punctuation.section.semantic.begin.atg
