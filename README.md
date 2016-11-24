@@ -1,4 +1,4 @@
-# ATG (Coco/R C#) syntax highlighting
+# ATG (Coco/R C#) syntax highlightinggi
 
 **Note:** Requires Sublime Text Build 3084 or newer
 
@@ -12,5 +12,13 @@
 
 
 ## Installation
+
+#### Using Package Control (recommended)
+1. Install [Package Control](https://packagecontrol.io/installation)
+2. Open the command palette: `ctrl+shift+p` (Win, Linux) or `cmd+shift+p` (OS X)
+3. Type `Package Control: Install Package` and press enter to select
+4. Type `ATG(CocoR C#) Syntax` and press enter to install this package
+
+#### Manual Installation
 1. Click the `Preferences > Browse Packages…` menu in Sublime Text 3 to find your `Packages` directory.
 2. Clone or [download](https://github.com/nolanar/ATG-Syntax-Sublime/archive/master.zip) this repository into your `Packages` directory.
