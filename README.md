@@ -1,4 +1,4 @@
-# ATG (Coco/R C#) syntax highlightinggi
+# ATG (Coco/R C#) syntax highlighting
 
 **Note:** Requires Sublime Text Build 3084 or newer
 
@@ -9,7 +9,6 @@
 * Embedded C# uses the official Sublime Text syntax definition for C#.
 * Bracket balancing, with bracket mismatch highlighting.
 * Shortcut to toggle single-line and multiline comments.
-
 
 ## Installation
 
