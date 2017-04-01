@@ -2,7 +2,7 @@
 
 **Note:** Requires Sublime Text Build 3084 or newer
 
-![screenshot of v0.0.2] (http://i.imgur.com/hkzoc52.png)
+![screenshot of v0.0.2](http://i.imgur.com/hkzoc52.png)
 
 ## Features
 * Full Coco/R syntax support as defined in the [official user manual](http://www.ssw.uni-linz.ac.at/Coco/Doc/UserManual.pdf#page=34).
